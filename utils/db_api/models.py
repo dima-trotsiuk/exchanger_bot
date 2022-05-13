@@ -12,7 +12,6 @@ class Group(Base):
     __tablename__ = 'groups'
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(100), nullable=False)
-    chats = relationship("Chat")
 
 
 class Chat(Base):
@@ -20,6 +19,7 @@ class Chat(Base):
     chat_id = Column(Integer, unique=True, nullable=False, primary_key=True)
     title = Column(String(100), nullable=False)
     group_id = Column(Integer, ForeignKey('groups.id'))
+    group = relationship("Group")
 
 
 Base.metadata.create_all(engine)

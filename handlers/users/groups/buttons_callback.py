@@ -10,7 +10,7 @@ from utils.db_api.models import engine, Group
 
 
 @dp.callback_query_handler(groups_button_callback.filter(type_command='groups'))
-async def edit_quantity_call(call: CallbackQuery, callback_data: dict):
+async def group_buttons_call(call: CallbackQuery, callback_data: dict):
     await call.answer(cache_time=1)
     action = callback_data.get('action')
     session = sessionmaker(bind=engine)()
