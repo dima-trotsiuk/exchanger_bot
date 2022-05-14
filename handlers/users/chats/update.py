@@ -3,16 +3,11 @@ import logging
 from aiogram.types import CallbackQuery
 from sqlalchemy.orm import sessionmaker
 
-from keyboards.default.cancel import cancel_menu
-from keyboards.inline.chats.callback_datas import chats_button_callback, select_update_chat_buttons_callback, \
+from keyboards.inline.chats.callback_datas import select_update_chat_buttons_callback, \
     select_update_group_buttons_callback
 from keyboards.inline.chats.select_group_update import select_update_group_buttons
-from keyboards.inline.chats.select_update_chat import select_update_chat_buttons
-from keyboards.inline.groups.callback_datas import groups_button_callback
-from keyboards.inline.groups.delete_groups import delete_group_buttons
 from loader import dp
-from states.groups.new_group_state import NewGroupOrderState
-from utils.db_api.models import engine, Group, Chat
+from utils.db_api.models import engine, Chat
 
 
 @dp.callback_query_handler(select_update_chat_buttons_callback.filter(type_command='select_update_chat'))

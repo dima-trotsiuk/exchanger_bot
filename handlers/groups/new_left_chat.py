@@ -3,6 +3,7 @@ import logging
 from aiogram import types
 from sqlalchemy.orm import sessionmaker
 
+from data.config import admins
 from loader import bot, dp
 from utils.db_api.models import engine, Chat
 
@@ -31,7 +32,8 @@ async def bot_welcome(message: types.Message):
 
             session.close()
 
-            await message.reply("Hi!\nI'm EchoBot!\nPowered by aiogram.")
+            for admin in admins:
+                await bot.send_message(admin, f'Бот был добавлен в чат "{title}"')
 
 
 @dp.message_handler(content_types=['left_chat_member'])
@@ -50,3 +52,5 @@ async def left_bot(message: types.Message):
         session.close()
 
         logging.info(f'Бот вышел из чата "{title}" и был удален из базы')
+        for admin in admins:
+            await bot.send_message(admin, f'Бот был удален из чата "{title}"')
