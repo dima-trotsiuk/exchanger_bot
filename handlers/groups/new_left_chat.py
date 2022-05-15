@@ -46,11 +46,13 @@ async def left_bot(message: types.Message):
     if message.left_chat_member.id == bot_id:
         session = sessionmaker(bind=engine)()
         chat = session.query(Chat).get(chat_id)
-
-        session.delete(chat)
-        session.commit()
+        if chat is None:
+            logging.error(f'Ошибка при удалении бота с чата "{chat_id}"')
+        else:
+            session.delete(chat)
+            session.commit()
+            logging.info(f'Бот вышел из чата "{title}" и был удален из базы')
         session.close()
 
-        logging.info(f'Бот вышел из чата "{title}" и был удален из базы')
         for admin in admins:
             await bot.send_message(admin, f'Бот был удален из чата "{title}"')

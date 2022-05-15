@@ -11,12 +11,12 @@ from keyboards.inline.distributions.callback_datas import get_group_distibutions
 from keyboards.inline.distributions.get_group import get_group_distibutions_button
 from loader import dp, bot
 from states.distributions.distributions import DistributionState
-from utils.db_api.models import engine, Group, Chat
+from utils.db_api.models import engine, Chat
 
 
 @dp.message_handler(text="Сделать рассылку 📩")
 async def distributions(message: types.Message):
-    await message.answer('В какую группу разослать сообщение?', reply_markup=await get_group_distibutions_button())
+    await get_group_distibutions_button(message, 'get_group_dist')
 
 
 @dp.callback_query_handler(

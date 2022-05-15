@@ -14,7 +14,7 @@ from utils.db_api.models import engine, Chat
 async def chat_buttons_call(call: CallbackQuery, callback_data: dict):
     await call.answer(cache_time=1)
     pk = callback_data.get('pk')
-
+    await call.message.delete()
     await call.message.answer('В какую группу присвоить чат?', reply_markup=await select_update_group_buttons(pk))
 
 
