@@ -22,4 +22,13 @@ class Chat(Base):
     group = relationship("Group")
 
 
+class Message(Base):
+    __tablename__ = 'messages'
+    message_id = Column(Integer, unique=True, nullable=False, primary_key=True)
+    chat_id = Column(Integer, ForeignKey('chats.chat_id'))
+    group_id = Column(Integer, ForeignKey('groups.id'))
+    group = relationship("Group")
+    chat = relationship("Chat")
+
+
 Base.metadata.create_all(engine)

@@ -24,6 +24,7 @@ async def chat_buttons_call(call: CallbackQuery, callback_data: dict):
             text = 'Чаты без группы:\n\n'
             for chat in chats:
                 text += f'{chat.title}\n'
+
             await call.message.answer(text)
         else:
             await call.message.answer('Нету таких чатов')
@@ -34,12 +35,13 @@ async def chat_buttons_call(call: CallbackQuery, callback_data: dict):
             groups = session.query(Group).filter(Group.title != 'Без группы')
             text = ''
             for group in groups:
-                text += f'{group.title}\n\n'
+                text += f'<b>{group.title}</b>\n\n'
                 pk = group.id
                 chats = session.query(Chat).filter(Chat.group_id == pk).all()
 
                 for i, chat in enumerate(chats, start=1):
                     text += f'{i}. {chat.title}\n'
+                text += '\n'
             await call.message.answer(text)
         else:
             await call.message.answer('Нету таких чатов')

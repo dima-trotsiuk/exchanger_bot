@@ -11,7 +11,7 @@ from keyboards.inline.distributions.callback_datas import get_group_distibutions
 from keyboards.inline.distributions.get_group import get_group_distibutions_button
 from loader import dp, bot
 from states.distributions.distributions import DistributionState
-from utils.db_api.models import engine, Chat
+from utils.db_api.models import engine, Chat, Message
 
 
 @dp.message_handler(text="Сделать рассылку 📩")
@@ -44,7 +44,6 @@ async def photo_or_text_state(message: types.Message, state: FSMContext):
 
     session = sessionmaker(bind=engine)()
     chats = session.query(Chat).filter(Chat.group_id == pk_group).all()
-    session.close()
 
     if chats:
         chats_pk = []
@@ -52,15 +51,29 @@ async def photo_or_text_state(message: types.Message, state: FSMContext):
             for chat in chats:
                 chats_pk.append(chat.chat_id)
                 await bot.send_photo(chat.chat_id, photo=message.photo[-1].file_id, caption=message.html_text)
+                m = Message(
+                    message_id=message.message_id,
+                    chat_id=chat.chat_id,
+                    group_id=pk_group
+                )
+                session.add(m)
             logging.info(f'В чаты {chats_pk} была разослана фотка "{message.photo[-1].file_id}"')
 
         elif content_type == 'text':
             for chat in chats:
                 chats_pk.append(chat.chat_id)
                 await bot.send_message(chat.chat_id, message.html_text)
+                m = Message(
+                    message_id=message.message_id,
+                    chat_id=chat.chat_id,
+                    group_id=pk_group
+                )
+                session.add(m)
             logging.info(f'В чаты {chats_pk} был разослан текст "{message.text}"')
         await message.answer('Сделано 😎', reply_markup=default_menu)
     else:
         await message.answer('В данной группе нету чатов 🤨', reply_markup=default_menu)
+    session.commit()
+    session.close()
     await state.reset_state()
     await state.finish()

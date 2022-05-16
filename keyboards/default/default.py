@@ -12,6 +12,9 @@ default_menu = ReplyKeyboardMarkup(
             KeyboardButton(text="Сделать опрос ❔",
                            request_poll=types.KeyboardButtonPollType(type=types.PollType.REGULAR))
         ],
+        [
+            KeyboardButton(text="Управлять рассылкой 🔧"),
+        ],
     ],
     resize_keyboard=True
 
