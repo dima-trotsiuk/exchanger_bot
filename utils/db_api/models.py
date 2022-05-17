@@ -18,17 +18,16 @@ class Chat(Base):
     __tablename__ = 'chats'
     chat_id = Column(Integer, unique=True, nullable=False, primary_key=True)
     title = Column(String(100), nullable=False)
-    group_id = Column(Integer, ForeignKey('groups.id'))
+    group_id = Column(Integer, ForeignKey('groups.id', ondelete='CASCADE'))
     group = relationship("Group")
 
 
 class Message(Base):
     __tablename__ = 'messages'
-    message_id = Column(Integer, unique=True, nullable=False, primary_key=True)
-    chat_id = Column(Integer, ForeignKey('chats.chat_id'))
-    group_id = Column(Integer, ForeignKey('groups.id'))
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    message_id = Column(Integer, unique=True, nullable=False)
+    group_id = Column(Integer, ForeignKey('groups.id', ondelete='CASCADE'))
     group = relationship("Group")
-    chat = relationship("Chat")
 
 
 Base.metadata.create_all(engine)

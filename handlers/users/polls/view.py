@@ -20,11 +20,10 @@ async def poll(message: types.Message, state: FSMContext):
     question = message_poll.question
     is_anonymous = message_poll.is_anonymous
 
-
     message_poll_dict = {'question': question, 'options': options_list, 'is_anonymous': is_anonymous}
 
     await state.update_data(message_poll_dict=message_poll_dict)
-    await get_group_distibutions_button(message, 'select_group_poll')
+    await get_group_distibutions_button(message, 'select_group_poll', 'В какую групу разослать опрос?')
 
 
 @dp.callback_query_handler(

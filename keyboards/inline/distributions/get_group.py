@@ -5,7 +5,7 @@ from utils.db_api.models import engine, Group, Chat
 from .callback_datas import get_group_distibutions_button_callback
 
 
-async def get_group_distibutions_button(message, type_command):
+async def get_group_distibutions_button(message, type_command, text):
     session = sessionmaker(bind=engine)()
     groups = session.query(Group).filter(Group.title != 'Без группы').all()
 
@@ -24,6 +24,6 @@ async def get_group_distibutions_button(message, type_command):
             list_button.append(el)
         session.close()
         keyboards = InlineKeyboardMarkup(row_width=1, inline_keyboard=list_button)
-        await message.answer('В какую группу разослать сообщение?', reply_markup=keyboards)
+        await message.answer(text, reply_markup=keyboards)
     else:
         await message.answer('Групп нету, создайте их')

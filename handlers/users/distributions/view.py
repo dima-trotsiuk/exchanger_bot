@@ -16,7 +16,7 @@ from utils.db_api.models import engine, Chat, Message
 
 @dp.message_handler(text="Сделать рассылку 📩")
 async def distributions(message: types.Message):
-    await get_group_distibutions_button(message, 'get_group_dist')
+    await get_group_distibutions_button(message, 'get_group_dist', 'В какую группу разослать сообщение?')
 
 
 @dp.callback_query_handler(
@@ -48,27 +48,42 @@ async def photo_or_text_state(message: types.Message, state: FSMContext):
     if chats:
         chats_pk = []
         if content_type == 'photo':
+            flag = False
+
             for chat in chats:
+                flag = True
                 chats_pk.append(chat.chat_id)
-                await bot.send_photo(chat.chat_id, photo=message.photo[-1].file_id, caption=message.html_text)
+                await bot.send_photo(chat.chat_id, photo=message.photo[-1].file_id,
+                                     caption=message.html_text)
+
+            if flag:
+                admin_message = await bot.send_photo(message.chat.id, photo=message.photo[-1].file_id,
+                                                     caption=message.html_text)
                 m = Message(
-                    message_id=message.message_id,
-                    chat_id=chat.chat_id,
-                    group_id=pk_group
+                    message_id=admin_message.message_id,
+                    group_id=pk_group,
                 )
                 session.add(m)
+
             logging.info(f'В чаты {chats_pk} была разослана фотка "{message.photo[-1].file_id}"')
 
         elif content_type == 'text':
+            flag = False
+
             for chat in chats:
+                flag = True
                 chats_pk.append(chat.chat_id)
                 await bot.send_message(chat.chat_id, message.html_text)
+
+            if flag:
+                admin_message = await bot.send_message(message.chat.id, message.html_text)
+
                 m = Message(
-                    message_id=message.message_id,
-                    chat_id=chat.chat_id,
-                    group_id=pk_group
+                    message_id=admin_message.message_id,
+                    group_id=pk_group,
                 )
                 session.add(m)
+
             logging.info(f'В чаты {chats_pk} был разослан текст "{message.text}"')
         await message.answer('Сделано 😎', reply_markup=default_menu)
     else:
