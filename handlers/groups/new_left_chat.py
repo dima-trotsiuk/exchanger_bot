@@ -54,5 +54,4 @@ async def left_bot(message: types.Message):
             logging.info(f'Бот вышел из чата "{title}" и был удален из базы')
         session.close()
 
-        for admin in admins:
-            await bot.send_message(admin, f'Бот был удален из чата "{title}"')
+        await bot.send_message(admins[0], f'Бот был удален из чата "{title}"')

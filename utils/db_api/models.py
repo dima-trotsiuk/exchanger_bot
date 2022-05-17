@@ -1,4 +1,6 @@
-from sqlalchemy import create_engine, Column, String, Integer, ForeignKey
+from datetime import datetime
+
+from sqlalchemy import create_engine, Column, String, Integer, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -16,18 +18,27 @@ class Group(Base):
 
 class Chat(Base):
     __tablename__ = 'chats'
-    chat_id = Column(Integer, unique=True, nullable=False, primary_key=True)
+    chat_id = Column(Integer, nullable=False, primary_key=True)
     title = Column(String(100), nullable=False)
     group_id = Column(Integer, ForeignKey('groups.id', ondelete='CASCADE'))
     group = relationship("Group")
 
 
+class Message_info(Base):
+    __tablename__ = 'message_info'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    message_id = Column(Integer, nullable=False)
+    group_id = Column(Integer, ForeignKey('groups.id', ondelete='CASCADE'))
+    group = relationship("Group")
+    created_on = Column(DateTime(), default=datetime.now)
+
+
 class Message(Base):
     __tablename__ = 'messages'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    message_id = Column(Integer, unique=True, nullable=False)
-    group_id = Column(Integer, ForeignKey('groups.id', ondelete='CASCADE'))
-    group = relationship("Group")
+    message_info_id = Column(Integer, ForeignKey('messages.id', ondelete='CASCADE'))
+    chat_id = Column(Integer, ForeignKey('chats.chat_id', ondelete='CASCADE'))
+    message_id = Column(Integer, nullable=False)
 
 
 Base.metadata.create_all(engine)
