@@ -106,11 +106,13 @@ async def photo_or_text_state(message: types.Message, state: FSMContext):
                         chat_id=chat.chat_id
                     )
                     session.add(message_save)
-
-                    logging.info(f'В чаты {chats_pk} была разослан текст "{a.message_id}"')
                 except Exception as e:
                     await message.answer(f'Ошибка при рассылке в чат {chat.chat_id}')
                     logging.error(f'Ошибка при рассылке в чат {chat.chat_id} {e}')
+
+            group = session.query(Group).get(pk_group)
+            group_title = group.title
+            logging.info(f'В группу "{group_title}" была разослан текст')
 
         await message.answer('Сделано 😎', reply_markup=default_menu)
     else:
