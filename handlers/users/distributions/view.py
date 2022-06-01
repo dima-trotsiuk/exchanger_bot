@@ -11,7 +11,7 @@ from keyboards.inline.distributions.callback_datas import get_group_distibutions
 from keyboards.inline.distributions.get_group import get_group_distibutions_button
 from loader import dp, bot
 from states.distributions.distributions import DistributionState
-from utils.db_api.models import engine, Chat, Message_info, Message
+from utils.db_api.models import engine, Chat, Message_info, Message, Group
 
 
 @dp.message_handler(text="Сделать рассылку 📩")
@@ -48,8 +48,14 @@ async def photo_or_text_state(message: types.Message, state: FSMContext):
     if chats:
         chats_pk = []
         if content_type == 'photo':
-            admin_message = await bot.send_photo(message.chat.id, photo=message.photo[-1].file_id,
-                                                 caption=message.html_text)
+            caption_flag = False
+            try:
+                admin_message = await bot.send_photo(message.chat.id, photo=message.photo[-1].file_id,
+                                                     caption=message.html_text)
+                caption_flag = True
+            except TypeError:
+                admin_message = await bot.send_photo(message.chat.id, photo=message.photo[-1].file_id)
+
             m = Message_info(
                 message_id=admin_message.message_id,
                 group_id=pk_group,
@@ -60,19 +66,25 @@ async def photo_or_text_state(message: types.Message, state: FSMContext):
             for chat in chats:
                 chats_pk.append(chat.chat_id)
                 try:
-                    a = await bot.send_photo(chat.chat_id, photo=message.photo[-1].file_id,
-                                             caption=message.html_text)
+                    if caption_flag:
+                        a = await bot.send_photo(chat.chat_id, photo=message.photo[-1].file_id,
+                                                 caption=message.html_text)
+                    else:
+                        a = await bot.send_photo(chat.chat_id, photo=message.photo[-1].file_id)
+
                     message_save = Message(
                         message_info_id=m.id,
                         message_id=a.message_id,
                         chat_id=chat.chat_id
                     )
                     session.add(message_save)
-
-                    logging.info(f'В чаты {chats_pk} была разослана фотка "{a.message_id}"')
                 except Exception as e:
                     await message.answer(f'Ошибка при рассылке в чат {chat.chat_id}')
                     logging.error(f'Ошибка при рассылке в чат {chat.chat_id} {e}')
+
+            group = session.query(Group).get(pk_group)
+            group_title = group.title
+            logging.info(f'В группу "{group_title}" была разослана фотка')
 
         elif content_type == 'text':
             admin_message = await bot.send_message(message.chat.id, message.html_text)
