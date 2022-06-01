@@ -29,7 +29,13 @@ async def chats_button():
         [
             InlineKeyboardButton(
                 text=f'Изменить групу',
-                callback_data=chats_button_callback.new(action="update", type_command=type_command)
+                callback_data=chats_button_callback.new(action="change_group", type_command=type_command)
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text=f'Обновить чаты 🆕',
+                callback_data=chats_button_callback.new(action="update_chats", type_command=type_command)
             ),
         ]
     ]
