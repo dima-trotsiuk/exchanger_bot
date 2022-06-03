@@ -70,6 +70,7 @@ async def chat_buttons_call(call: CallbackQuery, callback_data: dict):
                     await call.message.answer(f'Назва чату "{current_chat_title}" была обновлена в "{new_chat_title}"')
                     logging.info(f'Назва чату "{current_chat_title}" была обновлена в "{new_chat_title}"')
             except ChatNotFound:
+                session.delete(chat)
                 await call.message.answer(f'Чат "{chat.title}" был не найден. '
                                           f'Возможно его удалили или бот был исключен.'
                                           f'Этот чат удален с базы данных.')
