@@ -23,6 +23,12 @@ async def delete_or_view():
                 text=f'Посмотреть последнюю рассылку',
                 callback_data=delete_or_view_callback.new(action="view", type_command=type_command)
             ),
+        ],
+        [
+            InlineKeyboardButton(
+                text=f'Редактировать последнюю рассылку',
+                callback_data=delete_or_view_callback.new(action="edit_last", type_command=type_command)
+            ),
         ]
     ]
 
