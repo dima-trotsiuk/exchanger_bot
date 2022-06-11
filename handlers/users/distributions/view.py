@@ -107,81 +107,109 @@ async def send_message_func(message, pk_group, delay_data=None):
 
     session = sessionmaker(bind=engine)()
     chats = session.query(Chat).filter(Chat.group_id == pk_group).all()
+    session.close()
 
     if chats:
-        chats_pk = []
         if content_type == 'photo':
-            caption_flag = False
-            try:
-                admin_message = await bot.send_photo(message.chat.id, photo=message.photo[-1].file_id,
-                                                     caption=message.html_text)
-                caption_flag = True
-            except TypeError:
-                admin_message = await bot.send_photo(message.chat.id, photo=message.photo[-1].file_id)
-
-            m = Message_info(
-                message_id=admin_message.message_id,
-                group_id=pk_group,
-            )
-            session.add(m)
-            session.commit()
-
-            for chat in chats:
-                chats_pk.append(chat.chat_id)
-                try:
-                    if caption_flag:
-                        a = await bot.send_photo(chat.chat_id, photo=message.photo[-1].file_id,
-                                                 caption=message.html_text)
-                    else:
-                        a = await bot.send_photo(chat.chat_id, photo=message.photo[-1].file_id)
-
-                    message_save = Message(
-                        message_info_id=m.id,
-                        message_id=a.message_id,
-                        chat_id=chat.chat_id
-                    )
-                    session.add(message_save)
-                except Exception as e:
-                    await message.answer(f'Ошибка при рассылке в чат {chat.chat_id}')
-                    logging.error(f'Ошибка при рассылке в чат {chat.chat_id} {e}')
-
-            group = session.query(Group).get(pk_group)
-            group_title = group.title
-            logging.info(f'В группу "{group_title}" была разослана фотка')
+            await send_photo_for_chats2(chats, message, pk_group)
+            await send_photo_for_chats3(pk_group)
 
         elif content_type == 'text':
-            admin_message = await bot.send_message(message.chat.id, message.html_text)
-
-            m = Message_info(
-                message_id=admin_message.message_id,
-                group_id=pk_group,
-            )
-
-            session.add(m)
-            session.commit()
-
-            for chat in chats:
-                chats_pk.append(chat.chat_id)
-                try:
-                    a = await bot.send_message(chat.chat_id, message.html_text)
-
-                    message_save = Message(
-                        message_info_id=m.id,
-                        message_id=a.message_id,
-                        chat_id=chat.chat_id
-                    )
-                    session.add(message_save)
-                except Exception as e:
-                    await message.answer(f'Ошибка при рассылке в чат {chat.chat_id}')
-                    logging.error(f'Ошибка при рассылке в чат {chat.chat_id} {e}')
-
-            group = session.query(Group).get(pk_group)
-            group_title = group.title
-            logging.info(f'В группу "{group_title}" был разослан текст')
-
-        await message.answer('Сделано 😎', reply_markup=default_menu)
-
+            await send_text_for_chats2(chats, message, pk_group)
+            await send_text_for_chats3(pk_group)
     else:
         await message.answer('В данной группе нету чатов 🤨', reply_markup=default_menu)
+
+
+async def send_photo_for_chats1(message, pk_group):
+    caption_flag = False
+    try:
+        admin_message = await bot.send_photo(message.chat.id, photo=message.photo[-1].file_id,
+                                             caption=message.html_text, reply_markup=default_menu)
+        caption_flag = True
+    except TypeError:
+        admin_message = await bot.send_photo(message.chat.id, photo=message.photo[-1].file_id, reply_markup=default_menu)
+
+    message_info_save = Message_info(
+        message_id=admin_message.message_id,
+        group_id=pk_group,
+    )
+    session = sessionmaker(bind=engine)()
+    session.add(message_info_save)
+    session.commit()
+
+    return caption_flag, message_info_save.id
+
+
+async def send_photo_for_chats2(chats, message, pk_group):
+    caption_flag, message_info_id = await send_photo_for_chats1(message, pk_group)
+    for chat in chats:
+        try:
+            if caption_flag:
+                a = await bot.send_photo(chat.chat_id, photo=message.photo[-1].file_id,
+                                         caption=message.html_text)
+            else:
+                a = await bot.send_photo(chat.chat_id, photo=message.photo[-1].file_id)
+
+            message_save = Message(
+                message_info_id=message_info_id,
+                message_id=a.message_id,
+                chat_id=chat.chat_id
+            )
+            session = sessionmaker(bind=engine)()
+            session.add(message_save)
+            session.commit()
+            session.close()
+        except Exception as e:
+            await message.answer(f'Ошибка при рассылке в чат {chat.chat_id}')
+            logging.error(f'Ошибка при рассылке в чат {chat.chat_id} {e}')
+
+
+async def send_photo_for_chats3(pk_group):
+    session = sessionmaker(bind=engine)()
+    group = session.query(Group).get(pk_group)
+    group_title = group.title
+    session.close()
+    logging.info(f'В группу "{group_title}" была разослана фотка')
+
+
+async def send_text_for_chats1(message, pk_group):
+    admin_message = await bot.send_message(message.chat.id, message.html_text, reply_markup=default_menu)
+
+    message_info_save = Message_info(
+        message_id=admin_message.message_id,
+        group_id=pk_group,
+    )
+    session = sessionmaker(bind=engine)()
+    session.add(message_info_save)
+    session.commit()
+    return message_info_save.id
+
+
+async def send_text_for_chats2(chats, message, pk_group):
+    message_info_id = await send_text_for_chats1(message, pk_group)
+    for chat in chats:
+        try:
+            a = await bot.send_message(chat.chat_id, message.html_text)
+
+            message_save = Message(
+                message_info_id=message_info_id,
+                message_id=a.message_id,
+                chat_id=chat.chat_id
+            )
+            session = sessionmaker(bind=engine)()
+            session.add(message_save)
+            session.commit()
+            session.close()
+        except Exception as e:
+            await message.answer(f'Ошибка при рассылке в чат {chat.chat_id}')
+            logging.error(f'Ошибка при рассылке в чат {chat.chat_id} {e}')
+
+
+async def send_text_for_chats3(pk_group):
+    session = sessionmaker(bind=engine)()
+    group = session.query(Group).get(pk_group)
+    group_title = group.title
+    logging.info(f'В группу "{group_title}" был разослан текст')
     session.commit()
     session.close()
