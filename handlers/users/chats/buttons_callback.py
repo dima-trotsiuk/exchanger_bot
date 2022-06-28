@@ -119,8 +119,17 @@ async def s1(message: types.Message, state: FSMContext):
 
     group_dict = data.get('group_dict')
 
-    await message.answer("угу", reply_markup=default_menu)
-    await state.finish()
+    if id_chat.isdigit():
+        id_chat = int(id_chat)
+        if id_chat in group_dict:
+            await state.finish()
+            await message.answer('В какую группу присвоить чат?',
+                                 reply_markup=await select_update_group_buttons(pk_chat=group_dict[int(id_chat)]))
+        else:
+            await state.finish()
+            await message.answer('Такого чату нету', reply_markup=default_menu)
+    else:
+        await state.finish()
+        await message.answer('Нужно ввести число!', reply_markup=default_menu)
 
-    await message.answer('В какую группу присвоить чат?',
-                         reply_markup=await select_update_group_buttons(pk_chat=group_dict[int(id_chat)]))
+
