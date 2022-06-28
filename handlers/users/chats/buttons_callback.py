@@ -1,21 +1,22 @@
 import logging
 
+from aiogram import types
+from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.exceptions import ChatNotFound
 from sqlalchemy.orm import sessionmaker
 
 from keyboards.default.cancel import cancel_menu
+from keyboards.default.default import default_menu
 from keyboards.inline.chats.callback_datas import chats_button_callback
-from keyboards.inline.chats.select_update_chat import select_update_chat_buttons
-from keyboards.inline.groups.callback_datas import groups_button_callback
-from keyboards.inline.groups.delete_groups import delete_group_buttons
+from keyboards.inline.chats.select_group_update import select_update_group_buttons
 from loader import dp, bot
-from states.groups.new_group_state import NewGroupOrderState
+from states.chats.change_group_state import ChangeGroupState
 from utils.db_api.models import engine, Group, Chat
 
 
 @dp.callback_query_handler(chats_button_callback.filter(type_command='chats'))
-async def chat_buttons_call(call: CallbackQuery, callback_data: dict):
+async def chat_buttons_call(call: CallbackQuery, callback_data: dict, state: FSMContext):
     await call.answer(cache_time=1)
     action = callback_data.get('action')
     session = sessionmaker(bind=engine)()
@@ -50,8 +51,7 @@ async def chat_buttons_call(call: CallbackQuery, callback_data: dict):
             await call.message.answer('Нету таких чатов')
 
     elif action == 'change_group':
-        await call.message.answer('Выберите чат, которому нужно присвоить новую группу:',
-                                  reply_markup=await select_update_chat_buttons())
+        await change_group(call, state)
 
     elif action == 'update_chats':
         chats = session.query(Chat).all()
@@ -81,3 +81,46 @@ async def chat_buttons_call(call: CallbackQuery, callback_data: dict):
 
         session.commit()
     session.close()
+
+
+async def change_group(call, state):
+    session = sessionmaker(bind=engine)()
+    chats = session.query(Chat).order_by(Chat.group_id).all()
+
+    text = 'Выберите чат, которому нужно присвоить новую группу:\n\n'
+    group_dict = {}
+    i = 0
+    for chat in chats:
+        i += 1
+        title = chat.title
+        group_dict[i] = chat.chat_id
+
+        group = chat.group.title
+        text += f'<b>{i}.</b> <i>"{title}"</i> - {group}\n'
+
+    await state.update_data(group_dict=group_dict)
+    session.close()
+    await call.message.answer(text, reply_markup=cancel_menu)
+
+    await ChangeGroupState.id_group.set()
+
+
+@dp.message_handler(text="Отмена", state=ChangeGroupState.id_group)
+async def cancel(message: types.Message, state: FSMContext):
+    await message.answer("Хорошо :)", reply_markup=default_menu)
+    await state.finish()
+
+
+@dp.message_handler(state=ChangeGroupState.id_group)
+async def s1(message: types.Message, state: FSMContext):
+    id_chat = message.text
+
+    data = await state.get_data()
+
+    group_dict = data.get('group_dict')
+
+    await message.answer("угу", reply_markup=default_menu)
+    await state.finish()
+
+    await message.answer('В какую группу присвоить чат?',
+                         reply_markup=await select_update_group_buttons(pk_chat=group_dict[int(id_chat)]))
