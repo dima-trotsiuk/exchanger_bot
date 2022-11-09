@@ -97,6 +97,9 @@ async def change_group(call, state):
 
         group = chat.group.title
         text += f'<b>{i}.</b> <i>"{title}"</i> - {group}\n'
+        if i % 50 == 0:
+            await call.message.answer(text)
+            text = ''
 
     await state.update_data(group_dict=group_dict)
     session.close()
