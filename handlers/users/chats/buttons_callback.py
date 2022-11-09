@@ -41,7 +41,7 @@ async def chat_buttons_call(call: CallbackQuery, callback_data: dict, state: FSM
             for group in groups:
                 text += f'<b>{group.title}</b>\n\n'
                 pk = group.id
-                chats = session.query(Chat).filter(Chat.group_id == pk).all()
+                chats = session.query(Chat).filter(Chat.group_id == pk).order_by(Chat.title).all()
 
                 for i, chat in enumerate(chats, start=1):
                     text += f'{i}. {chat.title}\n'
