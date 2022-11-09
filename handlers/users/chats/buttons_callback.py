@@ -85,11 +85,12 @@ async def chat_buttons_call(call: CallbackQuery, callback_data: dict, state: FSM
 
 async def change_group(call, state):
     session = sessionmaker(bind=engine)()
-    chats = session.query(Chat).order_by(Chat.group_id).all()
+    chats = session.query(Chat).order_by(Chat.group_id).order_by(Chat.title).all()
 
     text = 'Выберите чат, которому нужно присвоить новую группу:\n\n'
     group_dict = {}
     i = 0
+
     for chat in chats:
         i += 1
         title = chat.title
