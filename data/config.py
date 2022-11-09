@@ -5,11 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BOT_TOKEN = str(os.getenv("BOT_TOKEN"))
-admins = [
-    580656744,
-    397928517,
-    1297108936,
-]
+admins = list(str(os.getenv("ADMINS")).split(","))
 
 ip = os.getenv("ip")
 
