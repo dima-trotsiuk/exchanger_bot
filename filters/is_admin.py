@@ -6,4 +6,4 @@ from data import config
 
 class IsAdmin(BoundFilter):
     async def check(self, message: types.Message):
-        return message.chat.id in config.admins
+        return str(message.chat.id) in config.admins
