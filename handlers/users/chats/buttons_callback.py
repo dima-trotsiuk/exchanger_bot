@@ -15,6 +15,16 @@ from states.chats.change_group_state import ChangeGroupState
 from utils.db_api.models import engine, Group, Chat
 
 
+def sorted_nicely(l, k=None):
+    import re
+    """ Sort the given iterable in the way that humans expect."""
+    convert = lambda text: int(text) if text.isdigit() else text
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+    l.sort(key=alphanum_key)
+    if k is not None:
+        k.sort(key=alphanum_key)
+
+
 @dp.callback_query_handler(chats_button_callback.filter(type_command='chats'))
 async def chat_buttons_call(call: CallbackQuery, callback_data: dict, state: FSMContext):
     await call.answer(cache_time=1)
@@ -26,6 +36,7 @@ async def chat_buttons_call(call: CallbackQuery, callback_data: dict, state: FSM
         if flag:
             chats = session.query(Chat).filter(Chat.group_id == 1).all()
             text = 'Чаты без группы:\n\n'
+
             for chat in chats:
                 text += f'{chat.title}\n'
 
@@ -42,9 +53,14 @@ async def chat_buttons_call(call: CallbackQuery, callback_data: dict, state: FSM
                 text += f'<b>{group.title}</b>\n\n'
                 pk = group.id
                 chats = session.query(Chat).filter(Chat.group_id == pk).order_by(Chat.title).all()
+                chats_title = []
+                for chat in chats:
+                    chats_title.append(chat.title)
 
-                for i, chat in enumerate(chats, start=1):
-                    text += f'{i}. {chat.title}\n'
+                sorted_nicely(chats_title)
+
+                for i, chat in enumerate(chats_title, start=1):
+                    text += f'{i}. {chat}\n'
                 text += '\n'
             await call.message.answer(text)
         else:
@@ -135,5 +151,3 @@ async def s1(message: types.Message, state: FSMContext):
     else:
         await state.finish()
         await message.answer('Нужно ввести число!', reply_markup=default_menu)
-
-
